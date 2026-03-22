@@ -219,19 +219,19 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
       <label>ชื่อผู้ใช้</label>
       <select id="login-user">
         <option value="">— เลือกชื่อของคุณ —</option>
-        <option value="ผู้จัดการ|manager|ตาล/มุก">ผู้จัดการ / หัวหน้า</option>
-        <option value="นส.ทีม1|staff|ไอซ์">ไอซ์</option>
-        <option value="นส.ทีม2|staff|เนตร">เนตร</option>
-        <option value="นส.ทีม3|staff|ทุกคน">ทุกคน (ทีมขาย)</option>
-        <option value="นส.บัญชี|backoffice|เนตร">เนตร (Back Office)</option>
+        <option value="1">ผู้จัดการ (หัวหน้า)</option>
+        <option value="2">ไอซ์</option>
+        <option value="3">เนตร</option>
+        <option value="4">ตาล</option>
+        <option value="5">มุก</option>
       </select>
     </div>
     <div class="field">
       <label>รหัสผ่าน</label>
-      <input type="password" id="login-pass" placeholder="กรอกรหัสผ่าน" value="1234">
+      <input type="password" id="login-pass" placeholder="กรอกรหัสผ่าน" value="1168">
     </div>
     <button class="btn" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:12px">รหัสผ่านเริ่มต้น: 1234</p>
+    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:12px">เข้าสู่ระบบเพื่ออัปเดตงานและรายงานผล:</p>
   </div>
 </div>
 
@@ -244,7 +244,10 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
         <div style="font-size:12px;opacity:0.75;color:white" id="header-date"></div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:13px;color:white;font-weight:500" id="header-user">—</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="header-avatar" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">—</div>
+          <div style="font-size:13px;color:white;font-weight:500" id="header-user">—</div>
+        </div>
         <button onclick="doLogout()" style="font-size:11px;color:rgba(255,255,255,0.7);background:none;border:none;cursor:pointer;margin-top:2px">ออกจากระบบ</button>
       </div>
     </div>
@@ -256,6 +259,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
     <div class="tab" data-tab="mytasks" onclick="switchTab(this,'mytasks')">✅ งานของฉัน</div>
     <div class="tab" data-tab="team" onclick="switchTab(this,'team')">👥 ทีม</div>
     <div class="tab" data-tab="notifs" onclick="switchTab(this,'notifs')">🔔 แจ้งเตือน</div>
+    <div class="tab" data-tab="staff" onclick="switchTab(this,'staff')">👤 พนักงาน</div>
   </div>
 
   <!-- ── TAB: Dashboard ── -->
@@ -336,6 +340,16 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
       <div id="notifs-list"></div>
     </div>
   </div>
+
+  <!-- ── TAB: Staff Management ── -->
+  <div id="tab-staff" class="tab-content" style="display:none">
+    <div style="padding:12px 16px;display:flex;gap:8px;align-items:center">
+      <button class="btn btn-sm" onclick="openAddStaff()">+ เพิ่มพนักงาน</button>
+    </div>
+    <div class="card">
+      <div id="staff-list"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ BOTTOM NAV ═══ -->
@@ -351,6 +365,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
   </button>
   <button class="nav-btn" onclick="switchTab(document.querySelector('[data-tab=notifs]'),'notifs')">
     <span class="nav-icon">🔔</span><span class="nav-label">แจ้งเตือน</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab(document.querySelector('[data-tab=staff]'),'staff')">
+    <span class="nav-icon">👤</span><span class="nav-label">พนักงาน</span>
   </button>
 </div>
 
@@ -375,14 +392,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
     </div>
     <div class="field">
       <label>ผู้รับผิดชอบ</label>
-      <select id="task-owner">
-        <option value="ทุกคน">ทุกคน</option>
-        <option value="ไอซ์">ไอซ์</option>
-        <option value="เนตร">เนตร</option>
-        <option value="ตาล">ตาล</option>
-        <option value="มุก">มุก</option>
-        <option value="ทีมขาย">ทีมขาย</option>
-      </select>
+      <select id="task-owner"><option value="ทุกคน">ทุกคน</option></select>
     </div>
     <div class="form-row">
       <div class="field">
@@ -434,7 +444,40 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
     <div id="modal-detail-content"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-detail')">ปิด</button>
+      <button class="btn" style="background:var(--red)" onclick="deleteCurrentTask()">🗑 ลบ</button>
       <button class="btn" id="btn-edit-task" onclick="editCurrentTask()">แก้ไข</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Add/Edit Staff ═══ -->
+<div class="modal-overlay" id="modal-staff">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-staff-title">เพิ่มพนักงาน</div>
+    <div class="field">
+      <label>ชื่อพนักงาน</label>
+      <input type="text" id="staff-name" placeholder="เช่น สมชาย">
+    </div>
+    <div class="field">
+      <label>ตำแหน่ง / บทบาท</label>
+      <select id="staff-role">
+        <option value="manager">ผู้จัดการ / หัวหน้า</option>
+        <option value="staff">พนักงานทั่วไป</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>รหัสผ่าน</label>
+      <input type="text" id="staff-pass" placeholder="รหัสผ่านสำหรับล็อกอิน" value="1234">
+    </div>
+    <div class="field">
+      <label>สีประจำตัว</label>
+      <div id="color-picker" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"></div>
+      <input type="hidden" id="staff-color" value="#C84B2F">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-staff')">ยกเลิก</button>
+      <button class="btn" onclick="saveStaff()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -491,11 +534,20 @@ let state = {
   currentUser: null,
   tasks: [],
   morningTalks: [],
-  editTaskId: null
+  employees: [],
+  editTaskId: null,
+  editStaffId: null
 };
 
 function loadState() {
-  try { const s = localStorage.getItem(STORAGE_KEY); if (s) state = {...state, ...JSON.parse(s)}; } catch(e){}
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const saved = JSON.parse(s);
+      state = {...state, ...saved};
+      if (!state.employees) state.employees = [];
+    }
+  } catch(e) { console.error('loadState error:', e); }
 }
 function saveState() {
   const s = {...state}; delete s.currentUser;
@@ -506,6 +558,16 @@ function saveState() {
 // SEED DATA (first load)
 // ═══════════════════════════════════════
 function seedData() {
+  // เติม employees เสมอถ้ายังไม่มี (ไม่ขึ้นกับ tasks)
+  if (!state.employees || !state.employees.length) {
+    state.employees = [
+      { id: 1, name: 'ผู้จัดการ', role: 'manager', pass: '1234', color: '#C84B2F' },
+      { id: 2, name: 'ไอซ์',      role: 'staff',   pass: '1234', color: '#1A5FA8' },
+      { id: 3, name: 'เนตร',      role: 'staff',   pass: '1234', color: '#2D7A4F' },
+      { id: 4, name: 'ตาล',       role: 'staff',   pass: '1234', color: '#B5600E' },
+      { id: 5, name: 'มุก',       role: 'staff',   pass: '1234', color: '#8B5CF6' },
+    ];
+  }
   if (state.tasks.length > 0) return;
   const today = new Date();
   const fmt = d => d.toISOString().split('T')[0];
@@ -525,6 +587,7 @@ function seedData() {
     { id: 1, date: fmt(today), branch: 'Online', topic: 'ติดตามยอดขาย', progress: '100%', owner: 'ผู้จัดการ', note: 'ยอดดีขึ้น' },
     { id: 2, date: fmt(today), branch: 'O.X.', topic: 'ตรวจสต๊อก', progress: '75%', owner: 'ไอซ์', note: 'รอของเพิ่ม' },
   ];
+
 }
 
 // ═══════════════════════════════════════
@@ -567,10 +630,14 @@ function buildNotifications() {
 // LOGIN / LOGOUT
 // ═══════════════════════════════════════
 function doLogin() {
-  const u = document.getElementById('login-user').value;
-  if (!u) { alert('กรุณาเลือกชื่อผู้ใช้'); return; }
-  const [display, role, owner] = u.split('|');
-  state.currentUser = { display, role, owner };
+  const val = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  if (!val) { alert('กรุณาเลือกชื่อผู้ใช้'); return; }
+  const emp = state.employees.find(e => String(e.id) === String(val));
+  if (!emp) { alert('ไม่พบข้อมูลพนักงาน กรุณารีโหลดหน้าใหม่'); return; }
+  const empPass = emp.pass || '1234';
+  if (pass !== empPass) { alert('รหัสผ่านไม่ถูกต้อง (รหัสเริ่มต้น: 1234)'); return; }
+  state.currentUser = { id: emp.id, display: emp.name, role: emp.role, owner: emp.name, color: emp.color };
   show('main-screen'); hide('login-screen');
   document.getElementById('bottom-nav').style.display = 'flex';
   initMain();
@@ -590,6 +657,8 @@ function initMain() {
   const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
   document.getElementById('header-date').textContent = `วัน${days[d.getDay()]}ที่ ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543}`;
   document.getElementById('header-user').textContent = state.currentUser.display;
+  const avatarEl = document.getElementById('header-avatar');
+  if (avatarEl) { avatarEl.textContent = state.currentUser.display.charAt(0); avatarEl.style.background = state.currentUser.color || 'rgba(255,255,255,0.2)'; }
   document.getElementById('mt-date-label').textContent = `ประจำวันที่ ${thaiDate(today())}`;
   renderAll();
 }
@@ -599,6 +668,9 @@ function renderAll() {
   renderMyTasks();
   renderTeam();
   renderNotifs();
+  renderStaff();
+  refreshLoginDropdown();
+  refreshOwnerDropdowns();
 }
 
 // ═══════════════════════════════════════
@@ -673,7 +745,7 @@ function renderMyTasks() {
   const filter = document.getElementById('filter-status')?.value || '';
   const owner = state.currentUser?.owner;
   let tasks = state.tasks;
-  if (owner && owner !== 'ตาล/มุก') tasks = tasks.filter(t => t.owner === owner || t.owner === 'ทุกคน');
+  if (owner && state.currentUser?.role !== 'manager') tasks = tasks.filter(t => t.owner === owner || t.owner === 'ทุกคน');
   if (filter) tasks = tasks.filter(t => {
     if (filter === 'เกินกำหนด') return getTaskStatus(t) === 'overdue';
     return t.status === filter;
@@ -686,18 +758,17 @@ function renderMyTasks() {
 // TEAM
 // ═══════════════════════════════════════
 function renderTeam() {
-  const members = ['ทุกคน','ไอซ์','เนตร','ตาล','มุก','ทีมขาย'];
   const el = document.getElementById('team-list');
+  const members = getEmpNames();
   el.innerHTML = members.map(m => {
     const tasks = state.tasks.filter(t => t.owner === m || (m==='ทุกคน' && t.owner==='ทุกคน'));
     if (!tasks.length) return '';
     const avg = tasks.length ? Math.round(tasks.reduce((a,b)=>a+b.pct,0)/tasks.length) : 0;
     const cls = avg >= 75 ? 'high' : avg >= 40 ? 'mid' : 'low';
-    const initials = m.charAt(0);
-    const colors = ['var(--accent)','var(--blue)','var(--green)','var(--amber)','#8B5CF6','#06B6D4'];
-    const ci = members.indexOf(m) % colors.length;
+    const emp = state.employees.find(e=>e.name===m);
+    const color = emp ? emp.color : 'var(--accent)';
     return `<div class="member-row" onclick="showMemberDetail('${m}')">
-      <div class="member-avatar" style="background:${colors[ci]}">${initials}</div>
+      <div class="member-avatar" style="background:${color}">${m.charAt(0)}</div>
       <div class="member-info">
         <div class="member-name">${m}</div>
         <div class="member-role">${tasks.length} งาน · ${tasks.filter(t=>t.status==='เสร็จแล้ว').length} เสร็จ</div>
@@ -818,6 +889,17 @@ function openAddTask() {
   openModal('modal-task');
 }
 
+function deleteCurrentTask() {
+  const t = state.tasks.find(x => x.id === state.editTaskId);
+  if (!t) return;
+  if (!confirm('ลบงาน "' + t.name + '" ออกจากระบบ?')) return;
+  state.tasks = state.tasks.filter(x => x.id !== state.editTaskId);
+  saveState();
+  closeModal('modal-detail');
+  renderAll();
+  showToast('🗑 ลบงานแล้ว');
+}
+
 function editCurrentTask() {
   const t = state.tasks.find(x=>x.id===state.editTaskId);
   if (!t) return;
@@ -896,21 +978,27 @@ function switchTab(el, tabId) {
   const tc = document.getElementById('tab-'+tabId);
   if (tc) tc.style.display = 'block';
   const navBtns = document.querySelectorAll('.nav-btn');
-  const tabMap = {dashboard:0,mytasks:1,team:2,notifs:3};
+  const tabMap = {dashboard:0,mytasks:1,team:2,notifs:3,staff:4};
   if (navBtns[tabMap[tabId]]) navBtns[tabMap[tabId]].classList.add('active');
 }
-
-// Close modals on overlay click
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); });
-});
 
 // ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
-loadState();
-seedData();
-saveState();
+function initApp() {
+  loadState();
+  seedData();
+  saveState();
+  refreshLoginDropdown();
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); });
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 // ═══════════════════════════════════════
 // LINE NOTIFY INTEGRATION
@@ -991,6 +1079,129 @@ function showToast(msg) {
   el.style.opacity = '1';
   clearTimeout(el._t);
   el._t = setTimeout(() => { el.style.opacity = '0'; }, 2800);
+}
+
+
+// ═══════════════════════════════════════
+// EMPLOYEE MANAGEMENT
+// ═══════════════════════════════════════
+const STAFF_COLORS = ['#C84B2F','#1A5FA8','#2D7A4F','#B5600E','#8B5CF6','#0F6E56','#993556','#06B6D4','#854F0B','#3C3489'];
+
+function getEmpNames() {
+  const names = state.employees.map(e => e.name);
+  if (!names.includes('ทุกคน')) names.unshift('ทุกคน');
+  return names;
+}
+
+function refreshLoginDropdown() {
+  const sel = document.getElementById('login-user');
+  if (!sel) return;
+  if (!state.employees || !state.employees.length) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— เลือกชื่อของคุณ —</option>';
+  state.employees.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = String(e.id);
+    opt.textContent = e.name + (e.role === 'manager' ? ' (หัวหน้า)' : '');
+    sel.appendChild(opt);
+  });
+  if (cur) sel.value = cur;
+}
+
+function refreshOwnerDropdowns() {
+  const names = getEmpNames();
+  ['task-owner'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
+    if (cur) sel.value = cur;
+  });
+}
+
+function renderStaff() {
+  const el = document.getElementById('staff-list');
+  if (!el) return;
+  if (!state.employees.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">👤</div>ยังไม่มีพนักงาน</div>'; return; }
+  const isManager = state.currentUser?.role === 'manager';
+  el.innerHTML = state.employees.map(e => `
+    <div class="member-row" style="cursor:default">
+      <div class="member-avatar" style="background:${e.color}">${e.name.charAt(0)}</div>
+      <div class="member-info">
+        <div class="member-name">${e.name}</div>
+        <div class="member-role">${e.role === 'manager' ? '👑 ผู้จัดการ / หัวหน้า' : '👤 พนักงาน'} · รหัสผ่าน: ${isManager ? e.pass : '••••'}</div>
+      </div>
+      ${isManager ? `<div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" onclick="openEditStaff(${e.id})" style="padding:6px 10px">✏️</button>
+        <button class="btn btn-sm" onclick="deleteStaff(${e.id})" style="padding:6px 10px;background:var(--red)">🗑</button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+function openAddStaff() {
+  if (state.currentUser?.role !== 'manager') { alert('เฉพาะผู้จัดการเท่านั้นที่เพิ่มพนักงานได้'); return; }
+  state.editStaffId = null;
+  document.getElementById('modal-staff-title').textContent = 'เพิ่มพนักงาน';
+  document.getElementById('staff-name').value = '';
+  document.getElementById('staff-role').value = 'staff';
+  document.getElementById('staff-pass').value = '1234';
+  document.getElementById('staff-color').value = STAFF_COLORS[state.employees.length % STAFF_COLORS.length];
+  buildColorPicker(document.getElementById('staff-color').value);
+  openModal('modal-staff');
+}
+
+function openEditStaff(id) {
+  const e = state.employees.find(x => x.id === id);
+  if (!e) return;
+  state.editStaffId = id;
+  document.getElementById('modal-staff-title').textContent = 'แก้ไขข้อมูลพนักงาน';
+  document.getElementById('staff-name').value = e.name;
+  document.getElementById('staff-role').value = e.role;
+  document.getElementById('staff-pass').value = e.pass;
+  document.getElementById('staff-color').value = e.color;
+  buildColorPicker(e.color);
+  openModal('modal-staff');
+}
+
+function buildColorPicker(selected) {
+  const el = document.getElementById('color-picker');
+  el.innerHTML = STAFF_COLORS.map(c => `
+    <div onclick="selectColor('${c}')" style="width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer;border:3px solid ${c === selected ? '#1A1814' : 'transparent'};transition:border 0.15s" id="swatch-${c.replace('#','')}"></div>
+  `).join('');
+}
+
+function selectColor(c) {
+  document.getElementById('staff-color').value = c;
+  document.querySelectorAll('[id^=swatch-]').forEach(s => s.style.border = '3px solid transparent');
+  const el = document.getElementById('swatch-'+c.replace('#',''));
+  if (el) el.style.border = '3px solid #1A1814';
+}
+
+function saveStaff() {
+  const name = document.getElementById('staff-name').value.trim();
+  const role = document.getElementById('staff-role').value;
+  const pass = document.getElementById('staff-pass').value.trim() || '1234';
+  const color = document.getElementById('staff-color').value;
+  if (!name) { alert('กรุณากรอกชื่อพนักงาน'); return; }
+  if (state.editStaffId) {
+    const e = state.employees.find(x => x.id === state.editStaffId);
+    if (e) { e.name = name; e.role = role; e.pass = pass; e.color = color; }
+  } else {
+    const newId = state.employees.length ? Math.max(...state.employees.map(e=>e.id)) + 1 : 1;
+    state.employees.push({ id: newId, name, role, pass, color });
+  }
+  saveState(); closeModal('modal-staff'); renderAll();
+  showToast('✅ บันทึกข้อมูลพนักงานแล้ว');
+}
+
+function deleteStaff(id) {
+  const e = state.employees.find(x => x.id === id);
+  if (!e) return;
+  if (!confirm('ลบพนักงาน "' + e.name + '" ออกจากระบบ?')) return;
+  state.employees = state.employees.filter(x => x.id !== id);
+  saveState(); renderAll();
+  showToast('🗑 ลบพนักงานแล้ว');
 }
 
 </script>
