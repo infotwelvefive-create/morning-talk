@@ -477,9 +477,9 @@ function defaultEmployees() {
     { id:2, name:'ไอซ์',      role:'staff',   pass:'4678', color:'#1A5FA8', email:'iceice.twelvefive123@gmail.com' },
     { id:3, name:'เนตร',      role:'staff',   pass:'4671', color:'#2D7A4F', email:'nornor.22052001@gmail.com' },
     { id:4, name:'ตาล',       role:'staff',   pass:'2303', color:'#B5600E', email:'thidarat.twelvefive@gmail.com' },
-    { id:5, name:'ฟ้าใส',       role:'staff',   pass:'4146', color:'#8B5CF6', email:'sarutath4146@gmail.com' }
-    { id:6, name:'ออฟ',       role:'staff',   pass:'1234', color:'#8B5CF6', email:'aofcs.twelvefive@gmail.com' }
-    { id:7, name:'ซีซ่า',       role:'staff',   pass:'2546', color:'#8B5CF6', email:'Pattrapornforwork@gmail.com' }
+    { id:5, name:'ฟ้าใส',     role:'staff',   pass:'4146', color:'#8B5CF6', email:'sarutath4146@gmail.com' },
+    { id:6, name:'ออฟ',       role:'staff',   pass:'1234', color:'#06B6D4', email:'aofcs.twelvefive@gmail.com' },
+    { id:7, name:'ซีซ่า',     role:'staff',   pass:'2546', color:'#993556', email:'Pattrapornforwork@gmail.com' }
   ];
 }
 
@@ -1298,23 +1298,26 @@ function togglePassVis() {
 }
 
 function initApp() {
-  // โหลด employees — ถ้า employees เก่าไม่มี pass หรือ pass ว่าง ให้ reset
+  // โหลด employees — force reset ถ้าจำนวนหรือรหัสไม่ตรง
+  const def = defaultEmployees();
   const saved = localStorage.getItem(EMP_KEY);
+  let needReset = true;
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      const needReset = !parsed.length || parsed.some(e => !e.pass || !e.pass.trim());
-      if (!needReset) S.employees = parsed;
-      else {
-        S.employees = defaultEmployees();
-        localStorage.setItem(EMP_KEY, JSON.stringify(S.employees));
+      // ตรวจว่ามีครบทุกคนและรหัสตรงกับ defaultEmployees
+      const allMatch = def.every(d => {
+        const found = parsed.find(p => p.id === d.id);
+        return found && found.pass === d.pass && found.name === d.name;
+      });
+      if (allMatch && parsed.length >= def.length) {
+        S.employees = parsed;
+        needReset = false;
       }
-    } catch(e) {
-      S.employees = defaultEmployees();
-      localStorage.setItem(EMP_KEY, JSON.stringify(S.employees));
-    }
-  } else {
-    S.employees = defaultEmployees();
+    } catch(e) {}
+  }
+  if (needReset) {
+    S.employees = def;
     localStorage.setItem(EMP_KEY, JSON.stringify(S.employees));
   }
 
