@@ -509,7 +509,19 @@ async function fetchFromSheet() {
     const res = await fetch(url);
     const data = await res.json();
     if (data.ok) {
-      S.tasks = data.tasks || [];
+      // merge checklist จาก local cache ถ้า Sheet ยังไม่มี
+      const localKey = userKey();
+      const localRaw = localStorage.getItem(localKey);
+      const localTasks = localRaw ? (JSON.parse(localRaw).tasks || []) : [];
+      S.tasks = (data.tasks || []).map(t => {
+        if (!t.checklist || !t.checklist.length) {
+          const local = localTasks.find(x => String(x.id) === String(t.id));
+          if (local && local.checklist && local.checklist.length) {
+            t.checklist = local.checklist;
+          }
+        }
+        return t;
+      });
       saveLocal();
       renderAll();
       showSyncBar('✅ อัปเดตแล้ว (' + S.tasks.length + ' งาน)');
