@@ -815,7 +815,13 @@ function openDetail(id) {
     + '<div class="flex-between" style="margin-bottom:8px"><span style="font-size:13px;font-weight:600;color:var(--text2)">ความคืบหน้า</span><span style="font-size:15px;font-weight:700;color:var(--accent)">'+t.pct+'%</span></div>'
     + '<div class="prog-bar"><div class="prog-fill '+pc+'" style="width:'+t.pct+'%"></div></div>'
     + '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-top:8px"><span>เริ่ม '+thaiDate(t.start)+'</span><span>ส่ง '+thaiDate(t.due)+' · '+dlLabel+'</span></div>'
-    + '</div>'
+    + '<div style="margin-top:12px">'
+    + '<label style="font-size:12px;font-weight:600;color:var(--text2)">อัปเดตความคืบหน้า: <span id="detail-pct-val">'+t.pct+'</span>%</label>'
+    + '<input type="range" id="detail-pct" min="0" max="100" step="5" value="'+t.pct+'" style="width:100%;margin-top:6px">'
+    + '<div style="display:flex;gap:8px;margin-top:8px">'
+    + '<button id="btn-save-pct" style="flex:1;padding:9px;background:#2D7A4F;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✅ บันทึก %</button>'
+    + '<button id="btn-quick-done" style="flex:1;padding:9px;background:#1A5FA8;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🎉 เสร็จแล้ว</button>'
+    + '</div></div>'
     + clHTML;
 
   if (t.notes) body += '<div style="padding:12px 16px;font-size:13px;color:var(--text2);background:var(--surface2)">📝 '+t.notes+'</div>';
@@ -838,6 +844,16 @@ function openDetail(id) {
   calArea.appendChild(hint);
 
   openModal('modal-detail');
+  setTimeout(() => {
+    const tid = String(t.id);
+    const sl = document.getElementById('detail-pct');
+    const lbl = document.getElementById('detail-pct-val');
+    const btnSave = document.getElementById('btn-save-pct');
+    const btnDone = document.getElementById('btn-quick-done');
+    if (sl && lbl) sl.oninput = function() { lbl.textContent = this.value + '%'; };
+    if (btnSave) btnSave.onclick = function() { updatePct(tid); };
+    if (btnDone) btnDone.onclick = function() { quickDone(tid); };
+  }, 50);
 }
 
 // ─── TOGGLE DONE / CHECKLIST ───
@@ -848,6 +864,31 @@ function toggleDone(id) {
   if (t.status === 'เสร็จแล้ว') { t.pct = 100; if (t.checklist) t.checklist.forEach(c => c.done = true); }
   saveLocal(); renderAll();
   postToSheet('updateTask', { task: t });
+}
+
+function updatePct(taskId) {
+  const t = S.tasks.find(x => String(x.id) === String(taskId));
+  if (!t) return;
+  const pct = parseInt(document.getElementById('detail-pct').value) || 0;
+  t.pct = pct;
+  if (pct === 100) t.status = 'เสร็จแล้ว';
+  else if (pct > 0) t.status = 'กำลังดำเนินการ';
+  else t.status = 'ยังไม่เริ่ม';
+  saveLocal(); renderAll();
+  postToSheet('updateTask', { task: t });
+  showToast('✅ บันทึกความคืบหน้า ' + pct + '% แล้ว');
+  openDetail(taskId);
+}
+
+function quickDone(taskId) {
+  const t = S.tasks.find(x => String(x.id) === String(taskId));
+  if (!t) return;
+  t.pct = 100; t.status = 'เสร็จแล้ว';
+  if (t.checklist) t.checklist.forEach(c => c.done = true);
+  saveLocal(); renderAll();
+  postToSheet('updateTask', { task: t });
+  showToast('🎉 งานเสร็จแล้ว!');
+  closeModal('modal-detail');
 }
 
 function toggleCL(taskId, idx) {
