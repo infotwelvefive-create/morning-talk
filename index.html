@@ -473,13 +473,13 @@ function loadLocal() {
 
 function defaultEmployees() {
   return [
-    { id:1, name:'ผู้จัดการ', role:'manager', pass:'1112', color:'#C84B2F', email:'Info.Twelvefive@gmail.com' },
-    { id:2, name:'ไอซ์', role:'staff', pass:'4678', color:'#1A5FA8', email:'iceice.twelvefive123@gmail.com' },
-    { id:3, name:'เนตร', role:'staff', pass:'4671', color:'#2D7A4F', email:'nornor.22052001@gmail.com' },
-    { id:4, name:'ตาล', role:'staff', pass:'2303', color:'#B5600E', email:'thidarat.twelvefive@gmail.com' },
-    { id:5, name:'ฟ้าใส', role:'staff', pass:'4146', color:'#8B5CF6', email:'sarutath4146@gmail.com' },
-    { id:6, name:'ออฟ', role:'staff', pass:'1234', color:'#06B6D4', email:'aofcs.twelvefive@gmail.com' },
-    { id:7, name:'ซีซ่า', role:'staff', pass:'2546', color:'#993556', email:'Pattrapornforwork@gmail.com' }
+    { id:1, name:'ผู้จัดการ', role:'manager', pass:'1125', color:'#C84B2F', email:'' },
+    { id:2, name:'ไอซ์', role:'staff', pass:'4678', color:'#1A5FA8', email:'' },
+    { id:3, name:'เนตร', role:'staff', pass:'4671', color:'#2D7A4F', email:'' },
+    { id:4, name:'ตาล', role:'staff', pass:'2303', color:'#B5600E', email:'' },
+    { id:5, name:'ฟ้าใส', role:'staff', pass:'4146', color:'#8B5CF6', email:'' },
+    { id:6, name:'ออฟ', role:'staff', pass:'1234', color:'#06B6D4', email:'' },
+    { id:7, name:'ซีซ่า', role:'staff', pass:'2546', color:'#993556', email:'' }
   ];
 }
 
@@ -692,13 +692,16 @@ function renderDashboard() {
 // ─── MY TASKS ───
 function myTasks() {
   if (S.user?.role === 'manager') return S.tasks;
-  const uid  = S.user?.id;
-  const name = S.user?.display;
-  return S.tasks.filter(t =>
-    t.owner === 'ทุกคน' ||
-    t.owner === name ||
-    (t.ownerId && String(t.ownerId) === String(uid))
-  );
+  const uid  = String(S.user?.id || '');
+  const name = S.user?.display || '';
+  return S.tasks.filter(t => {
+    if (t.owner === 'ทุกคน') return true;
+    if (t.owner === name) return true;
+    if (t.ownerId && String(t.ownerId) === uid) return true;
+    // กรณีไม่มี ownerId ให้ดูจากชื่อ owner
+    if (!t.ownerId && t.owner === name) return true;
+    return false;
+  });
 }
 function allVisibleTasks() { return myTasks(); }
 
@@ -994,10 +997,12 @@ function saveTask() {
     const newId = Date.now();
     const ownerName = document.getElementById('t-owner').value;
     const ownerEmp  = S.employees.find(e => e.name === ownerName);
+    // ถ้าเป็น staff เพิ่มงานให้ตัวเอง ให้ใช้ id ของตัวเอง
+    const resolvedOwnerId = ownerEmp ? ownerEmp.id : (ownerName === S.user?.display ? S.user?.id : null);
     const t = {
       id: newId, name, group: document.getElementById('t-group').value,
       owner: ownerName,
-      ownerId: ownerEmp ? ownerEmp.id : null,
+      ownerId: resolvedOwnerId,
       start: document.getElementById('t-start').value,
       due:   document.getElementById('t-due').value,
       remind: parseInt(document.getElementById('t-remind').value),
