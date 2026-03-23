@@ -575,7 +575,8 @@ function doLogin() {
   if (!val) { alert('กรุณาเลือกชื่อ'); return; }
   const emp = S.employees.find(e => String(e.id) === String(val));
   if (!emp) { alert('ไม่พบข้อมูลพนักงาน'); return; }
-  if (pass !== (emp.pass || '1234')) { alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  const correctPass = emp.pass && emp.pass.trim() ? emp.pass.trim() : '1234';
+  if (pass.trim() !== correctPass) { alert('รหัสผ่านไม่ถูกต้อง'); return; }
   S.user = { id: emp.id, display: emp.name, role: emp.role, color: emp.color };
   loadLocal();
   document.getElementById('login-screen').classList.remove('active');
@@ -1242,11 +1243,25 @@ function togglePassVis() {
 }
 
 function initApp() {
-  // โหลด employees
+  // โหลด employees — ถ้า employees เก่าไม่มี pass หรือ pass ว่าง ให้ reset
   const saved = localStorage.getItem(EMP_KEY);
-  if (saved) { try { S.employees = JSON.parse(saved); } catch(e) {} }
-  if (!S.employees || !S.employees.length) S.employees = defaultEmployees();
-  localStorage.setItem(EMP_KEY, JSON.stringify(S.employees));
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      const needReset = !parsed.length || parsed.some(e => !e.pass || !e.pass.trim());
+      if (!needReset) S.employees = parsed;
+      else {
+        S.employees = defaultEmployees();
+        localStorage.setItem(EMP_KEY, JSON.stringify(S.employees));
+      }
+    } catch(e) {
+      S.employees = defaultEmployees();
+      localStorage.setItem(EMP_KEY, JSON.stringify(S.employees));
+    }
+  } else {
+    S.employees = defaultEmployees();
+    localStorage.setItem(EMP_KEY, JSON.stringify(S.employees));
+  }
 
   refreshDropdowns();
 
