@@ -695,11 +695,16 @@ function myTasks() {
   const uid  = String(S.user?.id || '');
   const name = S.user?.display || '';
   return S.tasks.filter(t => {
+    // owner เป็น "ทุกคน" → ทุกคนเห็น
     if (t.owner === 'ทุกคน') return true;
-    if (t.owner === name) return true;
-    if (t.ownerId && String(t.ownerId) === uid) return true;
-    // กรณีไม่มี ownerId ให้ดูจากชื่อ owner
-    if (!t.ownerId && t.owner === name) return true;
+    // ชื่อตรงกันโดยตรง → เห็น (หลักสำคัญที่สุด)
+    if (t.owner && t.owner.trim() === name.trim()) return true;
+    // ownerId ตรงกัน AND owner ไม่ใช่ชื่อคนอื่น
+    if (t.ownerId && String(t.ownerId) === uid) {
+      // ตรวจสอบว่า owner ไม่ใช่ชื่อพนักงานคนอื่น
+      const ownerEmp = S.employees.find(e => e.name === t.owner);
+      if (!ownerEmp || ownerEmp.id === S.user?.id) return true;
+    }
     return false;
   });
 }
